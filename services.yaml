@@ -1,0 +1,14 @@
+dump_capabilities:
+  name: Dump Capabilities
+  description: >
+    Logs all raw SmartThings capabilities for a device to the HA log.
+    Use this to discover new features that can be added to the integration.
+    Find the output in Settings → System → Logs, search for "SmartThings capabilities".
+  fields:
+    device_id:
+      name: Device ID
+      description: The SmartThings device ID (find it in the entity's attributes or SmartThings Developer Console).
+      required: true
+      example: "edc6ecae-d27e-895f-1866-2f4c38425f0b"
+      selector:
+        text:
