@@ -2,7 +2,7 @@
 
 DOMAIN = "smartthings_custom"
 SMARTTHINGS_DOMAIN = "smartthings"
-POLL_INTERVAL = 30  # seconds
+POLL_INTERVAL = 10  # lower for diagnosis; restore to 30 in production
 
 CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_NAME = "device_name"

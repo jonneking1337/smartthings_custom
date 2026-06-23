@@ -52,20 +52,53 @@ class SmartThingsCustomCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         are reflected immediately instead of waiting for the next 30s poll.
         """
         st_entry = self._smartthings_entry
-        if not hasattr(st_entry, "runtime_data") or not hasattr(st_entry.runtime_data, "client"):
+
+        if not hasattr(st_entry, "runtime_data"):
             _LOGGER.warning(
-                "Official SmartThings integration has no runtime_data.client — "
-                "push updates unavailable, falling back to polling only"
+                "Official SmartThings integration (%s) has no runtime_data — "
+                "push updates unavailable, falling back to 30s polling only. "
+                "Make sure the official SmartThings integration is loaded and running.",
+                st_entry.entry_id,
             )
             return
 
-        client = st_entry.runtime_data.client
+        rd = st_entry.runtime_data
+        _LOGGER.debug(
+            "SmartThings runtime_data type: %s, attrs: %s",
+            type(rd).__name__,
+            [a for a in dir(rd) if not a.startswith("_")],
+        )
+
+        if not hasattr(rd, "client"):
+            _LOGGER.warning(
+                "SmartThings runtime_data has no 'client' attribute (found: %s) — "
+                "push updates unavailable, falling back to 30s polling only.",
+                [a for a in dir(rd) if not a.startswith("_")],
+            )
+            return
+
+        client = rd.client
+        _LOGGER.debug(
+            "SmartThings client type: %s, has add_unspecified_device_event_listener: %s",
+            type(client).__name__,
+            hasattr(client, "add_unspecified_device_event_listener"),
+        )
+
+        if not hasattr(client, "add_unspecified_device_event_listener"):
+            _LOGGER.warning(
+                "SmartThings client (%s) has no add_unspecified_device_event_listener — "
+                "push updates unavailable, falling back to 30s polling only. "
+                "Available methods: %s",
+                type(client).__name__,
+                [a for a in dir(client) if not a.startswith("_") and "event" in a.lower() or "listen" in a.lower()],
+            )
+            return
 
         @callback
         def _handle_event(event: Any) -> None:
             if getattr(event, "device_id", None) != self.device_id:
                 return
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Push event for %s: %s.%s = %s",
                 self.device_name,
                 getattr(event, "capability", "?"),
@@ -78,8 +111,9 @@ class SmartThingsCustomCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # we filter by device_id inside the handler.
         unsub = client.add_unspecified_device_event_listener(_handle_event)
         self._unsub_dispatcher.append(unsub)
-        _LOGGER.debug(
-            "Subscribed to SmartThings push updates for %s via official client",
+        _LOGGER.info(
+            "Subscribed to SmartThings push updates for %s via official client — "
+            "state changes will reflect immediately instead of waiting for 30s poll.",
             self.device_name,
         )
 
