@@ -140,9 +140,35 @@ class SmartThingsCustomCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._session
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch full device status in one API call."""
+        """Fetch full device status, preceded by a refresh command.
+
+        Samsung monitors don't push local state changes (OSD menu, physical buttons)
+        to SmartThings cloud. Sending 'refresh' first forces the device to report its
+        current state before we read it, so we always get the real live value.
+        """
         try:
             session = await self._get_session()
+
+            # Ask the device to sync its current state to SmartThings cloud.
+            refresh_resp = await session.async_request(
+                "POST",
+                f"{ST_API_BASE}/devices/{self.device_id}/commands",
+                json={
+                    "commands": [{
+                        "component": "main",
+                        "capability": "refresh",
+                        "command": "refresh",
+                        "arguments": [],
+                    }]
+                },
+            )
+            if not refresh_resp.ok:
+                _LOGGER.debug(
+                    "refresh command returned %s for %s — continuing with cached state",
+                    refresh_resp.status,
+                    self.device_name,
+                )
+
             resp = await session.async_request(
                 "GET",
                 f"{ST_API_BASE}/devices/{self.device_id}/status",
