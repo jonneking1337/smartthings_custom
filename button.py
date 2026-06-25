@@ -1,4 +1,4 @@
-"""Button entities for re-applying SmartThings select capabilities."""
+"""Button entities for SmartThings — apply-select buttons and media transport."""
 from __future__ import annotations
 
 import logging
@@ -11,7 +11,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, CAPABILITY_SELECT, CONF_DEVICE_ID, CONF_DEVICE_NAME, CONF_CAPABILITIES
+from .const import (
+    DOMAIN,
+    CAPABILITY_SELECT,
+    CAPABILITY_MEDIA_BUTTON,
+    CONF_DEVICE_ID,
+    CONF_DEVICE_NAME,
+    CONF_CAPABILITIES,
+)
 from .coordinator import SmartThingsCustomCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,15 +32,57 @@ async def async_setup_entry(
     coordinator: SmartThingsCustomCoordinator = hass.data[DOMAIN][entry.entry_id]
     found_capabilities: list[str] = entry.data.get(CONF_CAPABILITIES, [])
 
-    entities = []
+    entities: list[ButtonEntity] = []
+
+    # "Apply" button for each select capability (re-sends current value)
     for cap_id, cap_config in CAPABILITY_SELECT.items():
         if cap_id in found_capabilities and cap_config.get("apply_button", True):
             entities.append(
                 SmartThingsApplySelectButton(coordinator, entry, cap_id, cap_config)
             )
 
+    # Media transport buttons (play, pause, stop, fast-forward, rewind)
+    for cap_id, button_list in CAPABILITY_MEDIA_BUTTON.items():
+        if cap_id in found_capabilities:
+            for btn in button_list:
+                entities.append(
+                    SmartThingsMediaButton(coordinator, entry, cap_id, btn)
+                )
+
     if entities:
         async_add_entities(entities)
+
+
+class SmartThingsMediaButton(CoordinatorEntity, ButtonEntity):
+    """A button that fires a single media-transport command (play, pause, stop…)."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: SmartThingsCustomCoordinator,
+        entry: ConfigEntry,
+        capability_id: str,
+        btn_config: dict[str, Any],
+    ) -> None:
+        super().__init__(coordinator)
+        self._capability_id = capability_id
+        self._command = btn_config["command"]
+        self._attr_name = btn_config["name"]
+        self._attr_icon = btn_config.get("icon")
+        self._attr_unique_id = f"{entry.data[CONF_DEVICE_ID]}_{capability_id}_{self._command}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_DEVICE_ID])},
+            name=entry.data[CONF_DEVICE_NAME],
+            manufacturer="Samsung",
+        )
+
+    async def async_press(self) -> None:
+        await self.coordinator.async_send_command(
+            self._capability_id,
+            self._command,
+            [],
+        )
 
 
 class SmartThingsApplySelectButton(CoordinatorEntity, ButtonEntity):

@@ -15,7 +15,7 @@ from .coordinator import SmartThingsCustomCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BUTTON, Platform.SELECT, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
 DUMP_CAPABILITIES_SCHEMA = vol.Schema(
     {vol.Required(CONF_DEVICE_ID): cv.string}

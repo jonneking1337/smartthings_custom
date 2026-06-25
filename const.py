@@ -13,6 +13,7 @@ ST_API_BASE = "https://api.smartthings.com/v1"
 
 # Known capabilities → select entities
 # Each entry: attribute to read, command to send, where to find options
+# apply_button=False suppresses the "Apply" button for capabilities where it makes no sense
 CAPABILITY_SELECT: dict[str, dict] = {
     "custom.picturemode": {
         "attribute": "pictureMode",
@@ -42,10 +43,38 @@ CAPABILITY_SELECT: dict[str, dict] = {
         "name": "Picture Size",
         "icon": "mdi:aspect-ratio",
     },
+    "mediaInputSource": {
+        "attribute": "inputSource",
+        "command": "setInputSource",
+        "options_attribute": "supportedInputSources",
+        "name": "Input Source",
+        "icon": "mdi:hdmi-port",
+        "apply_button": False,
+    },
 }
 
 # Known capabilities → switch entities
 CAPABILITY_SWITCH: dict[str, dict] = {
+    "switch": {
+        "attribute": "switch",
+        "on_value": "on",
+        "on_command": "on",
+        "on_args": [],
+        "off_command": "off",
+        "off_args": [],
+        "name": "Power",
+        "icon": "mdi:power",
+    },
+    "audioMute": {
+        "attribute": "mute",
+        "on_value": "muted",
+        "on_command": "mute",
+        "on_args": ["muted"],
+        "off_command": "mute",
+        "off_args": ["unmuted"],
+        "name": "Mute",
+        "icon": "mdi:volume-off",
+    },
     "samsungvd.ambientContent": {
         "attribute": "ambientContent",
         "on_value": "true",
@@ -66,4 +95,30 @@ CAPABILITY_SWITCH: dict[str, dict] = {
         "name": "OCR",
         "icon": "mdi:ocr",
     },
+}
+
+# Known capabilities → number entities (sliders)
+CAPABILITY_NUMBER: dict[str, dict] = {
+    "audioVolume": {
+        "attribute": "volume",
+        "command": "setVolume",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": None,
+        "name": "Volume",
+        "icon": "mdi:volume-high",
+    },
+}
+
+# Known capabilities → standalone action buttons (e.g. media transport)
+# Each capability maps to a list of button definitions.
+CAPABILITY_MEDIA_BUTTON: dict[str, list[dict]] = {
+    "mediaPlayback": [
+        {"command": "play",        "name": "Play",         "icon": "mdi:play"},
+        {"command": "pause",       "name": "Pause",        "icon": "mdi:pause"},
+        {"command": "stop",        "name": "Stop",         "icon": "mdi:stop"},
+        {"command": "fastForward", "name": "Fast Forward", "icon": "mdi:fast-forward"},
+        {"command": "rewind",      "name": "Rewind",       "icon": "mdi:rewind"},
+    ],
 }
