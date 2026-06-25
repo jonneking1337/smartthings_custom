@@ -17,12 +17,19 @@ from .const import (
     CONF_CAPABILITIES,
     CAPABILITY_SELECT,
     CAPABILITY_SWITCH,
+    CAPABILITY_NUMBER,
+    CAPABILITY_MEDIA_BUTTON,
 )
 from .coordinator import SmartThingsCustomCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-KNOWN_CAPABILITIES = set(CAPABILITY_SELECT.keys()) | set(CAPABILITY_SWITCH.keys())
+KNOWN_CAPABILITIES = (
+    set(CAPABILITY_SELECT.keys())
+    | set(CAPABILITY_SWITCH.keys())
+    | set(CAPABILITY_NUMBER.keys())
+    | set(CAPABILITY_MEDIA_BUTTON.keys())
+)
 
 
 async def _get_smartthings_entry(hass: HomeAssistant):
@@ -142,6 +149,11 @@ class SmartThingsCustomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 found_names.append(f"Select: {CAPABILITY_SELECT[cap]['name']}")
             elif cap in CAPABILITY_SWITCH:
                 found_names.append(f"Switch: {CAPABILITY_SWITCH[cap]['name']}")
+            elif cap in CAPABILITY_NUMBER:
+                found_names.append(f"Number: {CAPABILITY_NUMBER[cap]['name']}")
+            elif cap in CAPABILITY_MEDIA_BUTTON:
+                btns = ", ".join(b["name"] for b in CAPABILITY_MEDIA_BUTTON[cap])
+                found_names.append(f"Buttons: {btns}")
 
         description = (
             f"Device: {device_name}\n"
