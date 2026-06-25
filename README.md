@@ -48,9 +48,10 @@ Only capabilities the device actually supports are created; disabled capabilitie
 
 1. Go to **Settings → Integrations → Add integration**.
 2. Search for **SmartThings Custom**.
-3. Select the SmartThings device you want to add.
-4. A confirmation screen shows which entities will be created based on the device's supported capabilities.
-5. Confirm to finish setup.
+3. Click **Add entry**
+4. Select the SmartThings device you want to add.
+5. A confirmation screen shows which entities will be created based on the device's supported capabilities.
+6. Confirm to finish setup.
 
 ## Entities created
 
